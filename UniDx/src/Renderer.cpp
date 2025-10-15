@@ -9,17 +9,6 @@
 
 namespace UniDx{
 
-// -----------------------------------------------------------------------------
-// 頂点シェーダー側と共有する、モデルビュー行列の定数バッファ
-//     UniDxではすべてのシェーダーでスロット0番に共通で指定する
-// -----------------------------------------------------------------------------
-struct VSConstantBuffer0
-{
-    Matrix world;
-    Matrix view;
-    Matrix projection;
-};
-
 
 // -----------------------------------------------------------------------------
 // 有効化
@@ -47,13 +36,15 @@ void Renderer::OnEnable()
 // -----------------------------------------------------------------------------
 void Renderer::updatePositionCameraCBuffer(const UniDx::Camera& camera) const
 {
-    // ─ ワールド行列を位置に合わせて作成
+    // ワールド行列を transform から合わせて作成
     VSConstantBuffer0 cb{};
     cb.world = transform->getLocalToWorldMatrix();
     cb.view = camera.GetViewMatrix();
     cb.projection = camera.GetProjectionMatrix(16.0f/9.0f);
 
     // 定数バッファ更新
+    ID3D11Buffer* cbs[1] = { constantBuffer0.Get() };
+    D3DManager::getInstance()->GetContext()->VSSetConstantBuffers(0, 1, cbs);
     D3DManager::getInstance()->GetContext()->UpdateSubresource(constantBuffer0.Get(), 0, nullptr, &cb, 0, 0);
 }
 
@@ -71,8 +62,6 @@ void Renderer::setShaderForRender() const
     {
         material->setForRender();
     }
-    ID3D11Buffer* cbs[1] = { constantBuffer0.Get() };
-    D3DManager::getInstance()->GetContext()->VSSetConstantBuffers(0, 1, cbs);
 }
 
 
@@ -87,7 +76,7 @@ void MeshRenderer::Render(const Camera& camera) const
     setShaderForRender();
 
     // 現在のTransformとカメラの情報をシェーダーのConstantBufferに転送
-    Renderer::updatePositionCameraCBuffer(camera);
+    updatePositionCameraCBuffer(camera);
 
     //-----------------------------
     // 描画実行

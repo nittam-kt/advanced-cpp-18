@@ -4,7 +4,7 @@
 
 #include <UniDx/Input.h>
 #include <UniDx/Collider.h>
-#include <UniDx/UniDxTime.h>
+#include <UniDx/Time.h>
 
 using namespace DirectX;
 using namespace UniDx;

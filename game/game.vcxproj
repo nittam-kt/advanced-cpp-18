@@ -175,6 +175,8 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="source\CameraBehaviour.h" />
+    <ClInclude Include="source\ChainRender.h" />
+    <ClInclude Include="source\Hinge.h" />
     <ClInclude Include="source\main.h" />
     <ClInclude Include="source\Player.h" />
     <ClInclude Include="source\SquareThrustRenderer.h" />
@@ -183,7 +185,9 @@
   <ItemGroup>
     <ClCompile Include="..\tinygltf\tiny_gltf.cc" />
     <ClCompile Include="source\CameraBehaviour.cpp" />
+    <ClCompile Include="source\ChainRender.cpp" />
     <ClCompile Include="source\CreateDefaultScene.cpp" />
+    <ClCompile Include="source\Hinge.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\Player.cpp" />
     <ClCompile Include="source\SquareThrustRenderer.cpp" />
@@ -217,6 +221,9 @@
     <FxCompile Include="Resource\SimpleShade.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Resource\SimpleSkin.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

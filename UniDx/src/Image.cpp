@@ -72,7 +72,6 @@ void Image::Render(const Matrix& proj) const
 			mesh->createBuffer<VertexPC>();
 		}
 		owner->getDefaultMaterial()->setForRender();
-		Debug::Log(mesh->positions[0].z);
 	}
 	else
 	{

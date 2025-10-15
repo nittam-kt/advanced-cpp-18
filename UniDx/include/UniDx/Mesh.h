@@ -87,6 +87,29 @@ struct SubMesh
         // メモリ上のデータを返す。DirextX11では即座に開放して良い
         return buf;
     }
+    template<typename TVertex, typename F>
+    std::unique_ptr< std::vector<TVertex> > createBuffer(F func)
+    {
+        // メモリ上に頂点を確保
+        std::unique_ptr < std::vector<TVertex> > buf = std::make_unique< std::vector<TVertex> >();
+        buf->resize(positions.size());
+
+        // 確保したメモリに各属性データをコピー
+        copyTo(std::span<TVertex>(*buf));
+        func(std::span<TVertex>(*buf));
+
+        // ID3D11Buffer を作成
+        stride = sizeof(TVertex);
+        createVertexBuffer(&buf->front());
+
+        // インデックスが設定されていればバッファを作成
+        if (indices.size() > 0)
+        {
+            createIndexBuffer();
+        }
+        // メモリ上のデータを返す。DirextX11では即座に開放して良い
+        return buf;
+    }
 
     // GPUにバッファを作成
     void createVertexBuffer(void* data);

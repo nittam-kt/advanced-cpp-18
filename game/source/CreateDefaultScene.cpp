@@ -18,44 +18,70 @@
 #include <UniDx/Image.h>
 
 #include "CameraBehaviour.h"
-#include "Player.h"
+#include "Hinge.h"
+#include "ChainRender.h"
 
 using namespace std;
 using namespace UniDx;
 
+// VertexPNTにウェイトWを追加した頂点情報
+struct VertexPNTW
+{
+    Vector3 position;
+    Vector3 normal;
+    Vector2 uv0;
+    float   weight;
+
+    void setPosition(Vector3 v) { position = v; }
+    void setNormal(Vector3 v) { normal = v; }
+    void setColor(Color c) {}
+    void setUV(Vector2 v) { uv0 = v; }
+    void setUV2(Vector2 v) {}
+    void setUV3(Vector2 v) {}
+    void setUV4(Vector2 v) {}
+    void setWeight(float w) { weight = w; }
+
+    static const std::array< D3D11_INPUT_ELEMENT_DESC, 4> layout;
+};
+const std::array< D3D11_INPUT_ELEMENT_DESC, 4> VertexPNTW::layout =
+{
+    D3D11_INPUT_ELEMENT_DESC{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    D3D11_INPUT_ELEMENT_DESC{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    D3D11_INPUT_ELEMENT_DESC{ "TEXUV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    D3D11_INPUT_ELEMENT_DESC{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+};
+
 
 unique_ptr<Scene> CreateDefaultScene()
 {
-    // -- プレイヤー --
-    auto player = make_unique<GameObject>(L"プレイヤー",
-        make_unique<GltfModel>(),
-        make_unique<Player>(),
-        make_unique<Rigidbody>(),
-        make_unique<SphereCollider>()
+    // -- チェーン --
+    auto chains =
+        make_unique<GameObject>(L"チェーン", Vector3(-1, 3, 0),
+            ChainRender::create<VertexPNT>(2, L"Resource/AlbedoShade.hlsl", L"Resource/wood-1.png"),
+
+            make_unique<GameObject>(L"ジョイント", Vector3(2, 0, 0),
+
+                make_unique<GameObject>(L"子チェーン",
+                    make_unique<Hinge>(),
+                    ChainRender::create<VertexPNT>(4, L"Resource/AlbedoShade.hlsl", L"Resource/wood-1.png")
+                )
+            )
         );
-    auto model = player->GetComponent<GltfModel>(true);
-    model->Load<VertexPNT>(
-        L"Resource/ModularCharacterPBR.glb",
-        L"Resource/AlbedoShade.hlsl",
-        L"Resource/Albedo.png");
+    chains->transform->localScale = Vector3(0.5, 0.5, 0.5);
 
-    player->transform->localPosition = Vector3(0,1,0);
-    player->transform->localRotation = Quaternion::CreateFromYawPitchRoll(XM_PI, 0, 0);
+    auto skinChains =
+        make_unique<GameObject>(L"チェーン", Vector3(-1, 1.5, 0),
+            ChainRender::create<VertexPNT>(2, L"Resource/AlbedoShade.hlsl", L"Resource/wood-1.png"),
 
-    // -- 戦闘機--
-    auto fighter = make_unique<GameObject>(L"自機",
-        make_unique<GltfModel>(),
-        make_unique<Rigidbody>(),
-        make_unique<SphereCollider>()
-    );
-    auto modelFighter = fighter->GetComponent<GltfModel>(true);
-    modelFighter->Load<VertexPNT>(
-        L"Resource/space_frigate_0.glb",
-        L"Resource/AlbedoShade.hlsl",
-        L"Resource/space_frigate.png");
+            make_unique<GameObject>(L"ジョイント", Vector3(2, 0, 0),
 
-    fighter->transform->localPosition = Vector3(-2, 2, 0);
-    fighter->GetComponent<Rigidbody>(true)->gravityScale = 0;   // 飛ぶために重力0
+                make_unique<GameObject>(L"子チェーン",
+                    make_unique<Hinge>(),
+                    ChainRender::create<VertexPNT>(4, L"Resource/AlbedoShade.hlsl", L"Resource/wood-1.png")
+                )
+            )
+        );
+    skinChains->transform->localScale = Vector3(0.5, 0.5, 0.5);
 
     // -- 床 --
     // キューブレンダラを作ってサイズを調整
@@ -71,7 +97,6 @@ unique_ptr<Scene> CreateDefaultScene()
 
     // -- カメラ --
     auto cameraBehaviour = make_unique<CameraBehaviour>();
-    cameraBehaviour->player = player->GetComponent<Player>(true);
 
     // -- ライト --
     auto light = make_unique<GameObject>(L"ライト",
@@ -79,12 +104,6 @@ unique_ptr<Scene> CreateDefaultScene()
     light->transform->localRotation = Quaternion::CreateFromYawPitchRoll(0.2f, 0.9f, 0);
 
     // -- UI --
-    auto image = make_unique<Image>();
-    image->SetColor(Color(0.3f, 1, 0.4f, 1));
-    auto imageObj = make_unique<GameObject>(L"バー", image);
-    imageObj->transform->localPosition = Vector3(0, 80, 0);
-    imageObj->transform->localScale = Vector3(160, 32, 1);
-
     auto font = make_shared<Font>();
     font->Load(L"Resource/M PLUS 1.spritefont");
     auto textMesh = make_unique<TextMesh>();
@@ -100,22 +119,21 @@ unique_ptr<Scene> CreateDefaultScene()
     return make_unique<Scene>(
 
         make_unique<GameObject>(L"オブジェクトルート",
-            move(player),
-            move(fighter),
+            move(chains),
+            move(skinChains),
             move(floor)
         ),
 
         move(light),
 
-        make_unique<GameObject>(L"カメラルート",
+        make_unique<GameObject>(L"カメラルート", Vector3(0, 3, -5),
             make_unique<Camera>(),
             move(cameraBehaviour)
         ),
 
         make_unique<GameObject>(L"UI",
             move(canvas),
-            move(textObj),
-            move(imageObj)
+            move(textObj)
         )
     );
 }

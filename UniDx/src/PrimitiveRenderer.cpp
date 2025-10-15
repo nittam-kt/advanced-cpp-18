@@ -68,7 +68,6 @@ void CubeRenderer::OnEnable()
     submesh->uv = std::span<const Vector2>(cube_uvs, std::size(cube_uvs));
     submesh->normals = std::span<const Vector3>(cube_normals, std::size(cube_normals));
     submesh->topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-    submesh->createBuffer<VertexPT>();
     if (createBufer_ != nullptr)
     {
         createBufer_(submesh.get());
